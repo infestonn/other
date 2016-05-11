@@ -1,0 +1,21 @@
+#!/bin/bash
+#sql scripts must be stored in ./script directory
+#
+#For security reason you should replace "--password=password" statement for "-p"
+db=version #DB name
+ver_table=version_table #Version table name
+column=version #Column with version number INT
+ver=`echo "select $column from $db.$ver_table;" | /usr/bin/mysql -u root --password=password | grep -v version`
+
+for i in `/bin/ls ./scripts/ | sort -g`; do
+        script_num=`echo $i | grep -E ^[0-9]+\.*\.sql$ | sed 's/[^0-9]*//g'`
+        if [ $ver -lt $script_num ]; then
+                /usr/bin/mysql -u root --password=password < ./scripts/$i
+                echo "$i executed"
+                /bin/echo "CONNECT $db; UPDATE $ver_table SET $column=$script_num WHERE $column=$ver;" | /usr/bin/mysql -u root --password=password
+                ver=$script_num
+
+        else
+                echo "Nothing happend"
+        fi
+done

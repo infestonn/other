@@ -1,0 +1,30 @@
+#!/bin/bash
+
+DATE=`date "+%F %H:%M:%S"`
+FILE="/var/www/vhost/dir.vesy.com.ua/mailalias.html"
+count=7
+limit=`cat  /etc/aliases | grep -c $`
+rm -f $FILE
+echo "<HTML> <head><META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=koi8-r\">
+<META HTTP-EQUIV=\"Pragma\" CONTENT=\"no-cache\">
+<META HTTP-EQUIV=\"Cache-Control\" content=\"no-cache\">
+<META HTTP-EQUIV=\"Expires\" CONTENT=\"Wed, 20 Feb 2015 08:00:18 GMT\">
+<META HTTP-EQUIV=\"Date\" CONTENT=\"Wed, 20 Feb 2015 08:00:18 GMT\">
+
+<link rel=\"stylesheet\" type=\"text/css\" href=\"./conf/style.css\" tile=\"Style\">
+<TITLE>MAILALIASES</TITLE>
+</head>
+Generated at $DATE
+<table>
+" >> $FILE
+
+while [ "$count" -lt "$(($limit+1))" ]
+do
+alias=`sed -n "$count"p /etc/aliases`
+echo "<tr><td>$alias</td></tr>" >> $FILE
+count=$(($count+1))
+done
+
+echo "</table>
+</HTML>" >> $FILE
+

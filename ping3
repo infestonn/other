@@ -1,0 +1,68 @@
+#!/bin/bash
+#Скрипт проверяет наличие GRE тоннелей на удаленные филиалы.
+#Проверка осуществляется пингом удаленного пира тоннеля, адреса 10.0.0.х
+#Если один пир не отвечает, проверяется резервный канал и если он доступен посылается соответствующее сообщение.
+
+recip=/dev/null #Кому отправлть оповещения
+
+PIXELHALL_FARLEP_ADSL=10.0.0.6
+HIMIK_SHDSL_FARLEP=10.0.0.58
+HIHMIK_FARLEP_ADSL=10.0.0.62
+KK=10.0.0.98
+KK_ADSL_VEGA=10.0.0.46
+SIMF1_ADSL=10.0.0.74
+PIXELHALL_FARLEP=10.0.0.10
+GRAFIT1_ADSL=10.0.0.78
+SIMF1_ADSL=10.0.0.74
+LVIV1_ADSL=10.0.0.86
+ZAP1=10.0.0.94
+ODESSA1_GOLDEN=10.0.0.90
+AMSTOR_PH=10.0.0.98
+#LUGANSK_RTR=10.0.0.102
+LISICHANSK_RTR=10.0.0.106
+HIHMIK_FARLEP_ADSL=10.0.0.110
+#OTO_STELTH=10.0.0.14
+#OTO_FARLEP_ADSL=10.0.0.18
+kiev_sklad1=10.0.0.22
+SERVICE_STELS=10.0.0.26
+DNEPR_INET=10.0.0.118
+KIEV_KIEV_SINET=10.0.0.34
+KIEV_INET2_UKRTEL_ADSL_OVPN=10.0.0.38
+
+    for tun in "$KK $KK_ADSL_VEGA KK_gre25 KK_ADSL_VEGA_gre11" "$LVIV1_ADSL 0 LVIV1_ADSL_gre22 0" "$SIMF1_ADSL 0 SIMF1_ADSL_gre19 0" "$ZAP1 0 ZAP1_gre24 0" "$DNEPR_INET 0 DNEPR_INET_gre7 0" "$SERVICE_STELS 0 SERVICE_STELS_gre6 0" "$kiev_sklad1 0 kiev_sklad1_gre5 0" "$LISICHANSK_RTR 0 LISICHANSK_RTR_gre27 0" "$GRAFIT1_ADSL 0 GRAFIT1_ADSL_gre20 0" "$PIXELHALL_FARLEP $PIXELHALL_FARLEP_ADSL PIXELHALL_FARLEP_gre2 PIXELHALL_FARLEP_ADSL_gre1" "$HIMIK_SHDSL_FARLEP $HIHMIK_FARLEP_ADSL HIMIK_SHDSL_FARLEP_gre15 HIHMIK_FARLEP_ADSL_gre28" "$KIEV_KIEV_SINET $KIEV_INET2_UKRTEL_ADSL_OVPN  KIEV_KIEV_SINET_gre8 KIEV_INET2_UKRTEL_ADSL_OVPN_gre9" "$ODESSA1_GOLDEN 0 ODESSA1_GOLDEN_gre23 0"
+    do
+    set -- $tun
+    ping -c 1 -s 100 $1 > /dev/null
+    if [ $? -ne 0 ]; then
+	if [ $2 = 0 ]; then #Если у филиала нет резервного канала отправить сообщение об ошибке
+	echo
+	echo "$3 НЕ доступен"
+	echo
+	mail $recip -s "Warning! $3 is unreachable" <<EOF
+	Connection problem. $3 is unreachable. Check connection.
+EOF
+	continue
+	fi
+	ping -c 1 -s 100 $2  > /dev/null #Если основной канал лежит, проверяем доступность второго
+	if [ $? -ne 0 ]; then
+	mail $recip -s "Warning! $3 is unreachable" <<EOF
+	Connection problem.
+	All reserved tunnels for $3 are down.
+EOF
+	echo
+        echo "Все резервные каналы $3 лежат"; continue #Если второй канал тоже лежит, отправить сообщение об ошибке
+        echo
+        else
+        echo
+        echo "$3 НЕ доступен. Переключаюсь на резервный $4" #Если резервный канал пингуется, отправить сообщение о переключении с основного канала на резервный
+        echo
+        mail $recip -s "Warning! $3 is unreachable changing route" <<EOF
+        Main tunnel $3 is down, switching to $4
+EOF
+	continue
+	fi
+    else
+    echo "$3 is OK"; continue #echo что бы можно было видеть результат, при запуске руками
+    fi
+    done
+exit 0

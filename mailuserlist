@@ -1,0 +1,28 @@
+#!/bin/bash
+
+DATE=`date "+%F %H:%M:%S"`
+FILE="/var/www/vhost/dir.vesy.com.ua/mailusers.html"
+rm -f $FILE
+echo "<HTML> <head><META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=koi8-r\">
+<META HTTP-EQUIV=\"Pragma\" CONTENT=\"no-cache\">
+<META HTTP-EQUIV=\"Cache-Control\" content=\"no-cache\">
+<META HTTP-EQUIV=\"Expires\" CONTENT=\"Wed, 20 Feb 2000 08:00:18 GMT\">
+<META HTTP-EQUIV=\"Date\" CONTENT=\"Wed, 20 Feb 2000 08:00:18 GMT\">
+
+<link rel=\"stylesheet\" type=\"text/css\" href=\"./conf/style.css\" tile=\"Style\">
+<TITLE>MAILBOXES</TITLE>
+</head>
+Generated at $DATE
+<table>
+" >> $FILE
+
+
+
+for user in `ls /home | awk -F, '{print  $0}'`;do
+#ALIASES=`/usr/local/bin/mailalias check $user|awk -F":" '{print $2}'`
+echo "<tr><td>$user</td></tr>" >> $FILE
+done
+
+echo "</table>
+</HTML>" >> $FILE
+
